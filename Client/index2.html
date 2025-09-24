@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>House Price Predictor</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* ===== Global Styles & Typography ===== */
+         body {
+            font-family: 'Poppins', sans-serif;
+            /* Background Image Styles */
+            background-image: url("https://cdn.wallpapersafari.com/37/79/g2tmZQ.jpg");
+            background-size: cover; /* Ensures the image covers the entire background */
+            background-position: center; /* Centers the image */
+            background-repeat: no-repeat; /* Prevents the image from repeating */
+            background-attachment: fixed; /* Keeps the background fixed when scrolling, if content overflows */
+            
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            color: #333; /* Dark gray for text */
+            
+            /* Optional: Add an overlay for better readability of text on the image */
+            position: relative;
+        }
+
+        /* ===== Card Container ===== */
+        .container {
+            background-color: #fff;
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+            max-width: 500px;
+            width: 100%;
+            text-align: center;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .container:hover {
+            transform: translateY(-5px); /* Lift effect on hover */
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+        }
+
+        /* ===== Headings ===== */
+        h1 {
+            margin-bottom: 30px;
+            color: #1e3a8a; /* A deep blue for the heading */
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        h1 .icon {
+            font-size: 1.2em;
+            color: #f59e0b; /* A vibrant orange for the icon */
+        }
+
+        /* ===== Form & Inputs ===== */
+        .form-group {
+            text-align: left;
+            margin-top: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #4b5563; /* Grayish blue for labels */
+            font-weight: 600;
+            font-size: 1rem;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 12px 15px;
+            border: 1px solid #e5e7eb; /* Lighter border color */
+            border-radius: 12px;
+            font-size: 1rem;
+            background-color: #f9fafb; /* Slightly different background for inputs */
+            color: #333;
+            transition: border-color 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: #3b82f6; /* Blue border on focus */
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+        }
+
+        /* ===== Button ===== */
+        button {
+            margin-top: 30px;
+            padding: 15px 25px;
+            width: 100%;
+            background: #3b82f6; /* A clean blue for the button */
+            color: white;
+            font-size: 1.1rem;
+            font-weight: 600;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: 0.3s ease;
+            box-shadow: 0 5px 15px rgba(59, 130, 246, 0.3);
+        }
+
+        button:hover {
+            background: #2563eb; /* Darker blue on hover */
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(59, 130, 246, 0.4);
+        }
+
+        /* ===== Result Display ===== */
+        .result {
+            margin-top: 30px;
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: #1e3a8a;
+            padding: 15px;
+            background-color: #e0f2fe;
+            border-radius: 12px;
+            display: none; /* Hide by default */
+        }
+
+        .result.show {
+            display: block; /* Show when the price is predicted */
+            animation: fadeIn 0.5s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .result .icon {
+            color: #f59e0b; /* Yellow icon for the result */
+            margin-right: 10px;
+        }
+
+        /* ===== Footer ===== */
+        .footer {
+            margin-top: 25px;
+            font-size: 0.8rem;
+            color: #9ca3af;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1><span class="icon">🏠</span> House Price Predictor</h1>
+
+        <div class="form-group">
+            <label for="location">Location</label>
+            <select id="location">
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label for="total_sqft">Total Square Feet</label>
+            <input type="number" id="total_sqft" placeholder="e.g., 1200">
+        </div>
+
+        <div class="form-group">
+            <label for="bhk">BHK</label>
+            <input type="number" id="bhk" placeholder="e.g., 2">
+        </div>
+
+        <div class="form-group">
+            <label for="bath">Bathrooms</label>
+            <input type="number" id="bath" placeholder="e.g., 2">
+        </div>
+
+        <button onclick="predictPrice()">Predict Price</button>
+
+        <div class="result" id="result"></div>
+        <div class="footer">Powered by AI</div>
+    </div>
+
+    <script>
+        // Updated JavaScript to handle the new result display class
+        window.addEventListener('DOMContentLoaded', async () => {
+            try {
+                const response = await fetch('http://127.0.0.1:5000/get_location_names');
+                const data = await response.json();
+
+                const locationSelect = document.getElementById('location');
+                data.locations.forEach(loc => {
+                    const option = document.createElement('option');
+                    option.value = loc;
+                    option.text = loc;
+                    locationSelect.appendChild(option);
+                });
+            } catch (error) {
+                console.error("Error fetching locations:", error);
+                const locationSelect = document.getElementById('location');
+                locationSelect.innerHTML = '<option>Error loading locations</option>';
+            }
+        });
+
+        async function predictPrice() {
+            const location = document.getElementById('location').value;
+            const total_sqft = document.getElementById('total_sqft').value;
+            const bhk = document.getElementById('bhk').value;
+            const bath = document.getElementById('bath').value;
+            const resultDiv = document.getElementById('result');
+
+            if(!total_sqft || !bhk || !bath || !location) {
+                alert("Please fill all input fields!");
+                return;
+            }
+
+            try {
+                const formData = new FormData();
+                formData.append('location', location);
+                formData.append('total_sqft', total_sqft);
+                formData.append('bhk', bhk);
+                formData.append('bath', bath);
+
+                const response = await fetch('http://127.0.0.1:5000/predict_home_price', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const data = await response.json();
+                resultDiv.innerHTML = `<span class="icon">💰</span> Estimated Price: ₹ ${data.estimated_price.toLocaleString()} Lakhs`;
+                resultDiv.classList.add('show');
+            } catch (error) {
+                console.error("Error predicting price:", error);
+                resultDiv.innerHTML = `<span class="icon">⚠️</span> Error predicting price.`;
+                resultDiv.classList.add('show');
+            }
+        }
+    </script>
+</body>
+</html>
