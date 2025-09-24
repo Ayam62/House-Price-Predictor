@@ -220,7 +220,7 @@
                 formData.append('bhk', bhk);
                 formData.append('bath', bath);
 
-                const response = await fetch('http://127.0.0.1:5000/predict_home_price', {
+                const response = await fetch('https://house-price-predictor-wgnz.onrender.com/predict_home_price', {
                     method: 'POST',
                     body: formData
                 });
